@@ -8,9 +8,9 @@ from lukinoising4GP import lukinoising
 from create_model import create_model, load_image, draw_prediction
 
 # Load model
-
 EXAMPLE_IMG = "dataset/Set1-Training&Validation Sets CNN/Standard/25.png"
 MODEL_PATH = "model.h5"
+MODEL_WEIGHTS = "model.weights.h5"
 IMAGE_SHAPE = (450, 600, 3)
 
 class ImageBrowser(QMainWindow):
@@ -37,6 +37,7 @@ class ImageBrowser(QMainWindow):
 
         # Load model
         self.model = create_model((450, 600, 3))
+        self.model.load_weights(MODEL_WEIGHTS)
 
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Image File", "",
@@ -50,11 +51,12 @@ class ImageBrowser(QMainWindow):
         self.image_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         self.plot_image(img)
 
+    def loop_image_processing(self):
         # Set a timer to show the denoised image after 2 seconds
         QTimer.singleShot(2000, self.denoise_image)
 
         # Set a timer to show the predicted bounding box after 4 seconds
-        QTimer.singleShot(4000, self.draw_prediction)
+        QTimer.singleShot(2000, self.draw_prediction)
 
     def denoise_image(self):
         img_denoise = lukinoising(self.image_grayscale)
