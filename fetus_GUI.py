@@ -24,20 +24,24 @@ class ImageBrowser(QMainWindow):
         self.layout = QVBoxLayout(self.central_widget)
 
         # Browse button
-        self.browse_button = QPushButton("Browse")
+        self.browse_button = QPushButton("Select an image...")
         self.browse_button.clicked.connect(self.browse_file)
         self.layout.addWidget(self.browse_button)
+
+
+        # Load model
+        self.model = create_model((450, 600, 3))
+        self.model.load_weights(MODEL_WEIGHTS)
 
         # Image label
         self.image_label = QLabel()
         self.layout.addWidget(self.image_label)
         self.image = None
         self.image_grayscale = None
+        self.image_denoised = None
+        self.image_predicted = None
         self.load_image(EXAMPLE_IMG)
 
-        # Load model
-        self.model = create_model((450, 600, 3))
-        self.model.load_weights(MODEL_WEIGHTS)
 
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Image File", "",
@@ -49,22 +53,22 @@ class ImageBrowser(QMainWindow):
         img = load_image(file_path)
         self.image = img.copy()
         self.image_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        self.plot_image(img)
+        self.image_denoised = lukinoising(self.image_grayscale.copy())
+        self.image_predicted = draw_prediction(self.model, self.image, plot=False)
+        self.loop_image_processing()
 
     def loop_image_processing(self):
+        """
+        Loop through the image processing steps
+        """
+        # Show the original image
+        self.plot_image(self.image)
+
         # Set a timer to show the denoised image after 2 seconds
-        QTimer.singleShot(2000, self.denoise_image)
+        QTimer.singleShot(2000, lambda: self.plot_image(self.image_denoised))
 
         # Set a timer to show the predicted bounding box after 4 seconds
-        QTimer.singleShot(2000, self.draw_prediction)
-
-    def denoise_image(self):
-        img_denoise = lukinoising(self.image_grayscale)
-        self.plot_image(img_denoise)
-
-    def draw_prediction(self):
-        img_with_bb = draw_prediction(self.model, self.image, plot=False)
-        self.plot_image(img_with_bb)
+        QTimer.singleShot(4000, lambda: self.plot_image(self.image_predicted))
 
     def plot_image(self, array):
         img = Image.fromarray(array)
