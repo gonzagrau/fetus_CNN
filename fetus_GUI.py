@@ -11,7 +11,9 @@ from load_models import cnn_vgg_model, load_image, draw_predicted_bounding_box
 EXAMPLE_IMG = "dataset/Set1-Training&Validation Sets CNN/Standard/25.png"
 MODEL_PATH = "model.h5"
 MODEL_WEIGHTS = "model.weights.h5"
-IMAGE_SHAPE = (450, 600, 3)
+IMAGE_SHAPE = (225, 300, 3)
+RESIZE_SHAPE = (300, 225)
+
 
 class ImageBrowser(QMainWindow):
     def __init__(self):
@@ -30,7 +32,7 @@ class ImageBrowser(QMainWindow):
 
 
         # Load model
-        self.model = cnn_vgg_model((450, 600, 3))
+        self.model = cnn_vgg_model(IMAGE_SHAPE)
         self.model.load_weights(MODEL_WEIGHTS)
 
         # Image label
@@ -38,14 +40,20 @@ class ImageBrowser(QMainWindow):
         self.layout.addWidget(self.image_label)
         self.image = None
         self.image_grayscale = None
-        self.image_denoised = None
         self.image_predicted = None
         self.load_image(EXAMPLE_IMG)
+
+        # Add 3 buttons in a horizontal layout: original, grayscale, predicted
+        self.button_layout = QVBoxLayout()
+        self.layout.addLayout(self.button_layout)
+        self.show_original_button = QPushButton("Original")
+        self.show_original_button.clicked.connect(lambda: self.plot_image(self.image))
+        self.show_
 
 
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Image File", "",
-                                                   "Image Files (*.jpg *.jpeg *.png *.bmp *.tiff)")
+                                                   "Image Files (*.jpg *.jpeg *.png *.bmp *.tiff)", dir='./dataset')
         if file_path:
             self.load_image(file_path)
 
@@ -53,24 +61,13 @@ class ImageBrowser(QMainWindow):
         img = load_image(file_path)
         self.image = img.copy()
         self.image_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        self.image_denoised = lukinoising(self.image_grayscale.copy())
         self.image_predicted = draw_predicted_bounding_box(self.model, self.image, plot=False)
         self.loop_image_processing()
 
-    def loop_image_processing(self):
-        """
-        Loop through the image processing steps
-        """
-        # Show the original image
-        self.plot_image(self.image)
-
-        # Set a timer to show the denoised image after 2 seconds
-        QTimer.singleShot(2000, lambda: self.plot_image(self.image_denoised))
-
-        # Set a timer to show the predicted bounding box after 4 seconds
-        QTimer.singleShot(4000, lambda: self.plot_image(self.image_predicted))
-
     def plot_image(self, array):
+        """
+        Given an image as an array, display it in the GUI
+        """
         img = Image.fromarray(array)
         qt_img = ImageQt.ImageQt(img)
         pixmap = QPixmap.fromImage(qt_img)
