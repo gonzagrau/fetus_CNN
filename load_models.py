@@ -5,6 +5,7 @@ from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense, Dropout, Activation
 from tensorflow.keras.layers import  Concatenate, Conv2DTranspose, ZeroPadding2D
 from tensorflow.keras.applications import VGG16
+from lukinoising4GP import lukinoising
 
 
 def cnn_vgg_model(input_shape):
@@ -95,6 +96,7 @@ def load_image(filepath: str, resize_shape: tuple) -> np.ndarray:
     :return: image as numpy array
     """
     img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+    img = lukinoising(img)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     img = cv2.resize(img, resize_shape)
 
