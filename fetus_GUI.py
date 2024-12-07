@@ -5,7 +5,7 @@ from PySide6.QtCore import QTimer
 import cv2
 from PIL import Image, ImageQt
 from lukinoising4GP import lukinoising
-from create_model import create_model, load_image, draw_prediction
+from load_models import cnn_vgg_model, load_image, draw_predicted_bounding_box
 
 # Load model
 EXAMPLE_IMG = "dataset/Set1-Training&Validation Sets CNN/Standard/25.png"
@@ -30,7 +30,7 @@ class ImageBrowser(QMainWindow):
 
 
         # Load model
-        self.model = create_model((450, 600, 3))
+        self.model = cnn_vgg_model((450, 600, 3))
         self.model.load_weights(MODEL_WEIGHTS)
 
         # Image label
@@ -54,7 +54,7 @@ class ImageBrowser(QMainWindow):
         self.image = img.copy()
         self.image_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         self.image_denoised = lukinoising(self.image_grayscale.copy())
-        self.image_predicted = draw_prediction(self.model, self.image, plot=False)
+        self.image_predicted = draw_predicted_bounding_box(self.model, self.image, plot=False)
         self.loop_image_processing()
 
     def loop_image_processing(self):
