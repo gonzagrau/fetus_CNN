@@ -88,7 +88,7 @@ def unet_model(input_shape=(225, 300, 3), num_classes=1):
     return model
 
 
-def load_image(filepath: str) -> np.ndarray:
+def load_image(filepath: str, resize_shape: tuple) -> np.ndarray:
     """
     Load image from file
     :param filepath: path to image file
@@ -96,7 +96,7 @@ def load_image(filepath: str) -> np.ndarray:
     """
     img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-    img = cv2.resize(img, (600, 450))
+    img = cv2.resize(img, resize_shape)
 
     return img
 
@@ -161,9 +161,10 @@ def draw_predicted_mask(model: Model, img: np.ndarray, plot: bool = True) -> np.
 
 
 def main():
-    input_shape = (450, 600, 3)
+    resize_shape = (300, 225)
+    input_shape = (225, 300, 3)
     ex_path = 'dataset/Set1-Training&Validation Sets CNN/Standard/26.png'
-    img = load_image(ex_path)
+    img = load_image(ex_path, resize_shape)
 
     # Test lukimodel with example image
     lukimodel = cnn_vgg_model(input_shape)
@@ -171,9 +172,9 @@ def main():
     draw_predicted_bounding_box(lukimodel, img)
 
     # Test ivomodel with example image
-    # ivomodel = unet_model(input_shape)
-    # ivomodel.load_weights("unet_segNT_fetus.weights.h5")
-    # draw_predicted_mask(ivomodel, img)
+    ivomodel = unet_model(input_shape)
+    ivomodel.load_weights("unet_segNT_fetus.weights.h5")
+    draw_predicted_mask(ivomodel, img)
 
 
 if __name__ == "__main__":
