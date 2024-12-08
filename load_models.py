@@ -6,6 +6,7 @@ from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense, Dropout, Activation
 from tensorflow.keras.layers import  Concatenate, Conv2DTranspose, ZeroPadding2D
 from tensorflow.keras.applications import VGG16
+from tensorflow.keras.saving import load_model
 from lukinoising4GP import lukinoising
 
 
@@ -149,22 +150,22 @@ def draw_predicted_mask(model: Model, img: np.ndarray, plot: bool = True) -> np.
     """
     img = img.copy()
     img = img / 255.0
+
     pred = model.predict(np.array([img]))[0]
-    pred = np.argmax(pred, axis=-1)
+    pred = np.uint8(255 * (pred > 0.5)).squeeze(-1)
 
     img = (img * 255).astype(np.uint8)
 
-    print(np.sum(pred > 0.))
-
+    # Superimpose mask on original image using cv2
+    img[(pred == 255), :] = [0, 255, 255]
 
     if plot:
-        plt.imshow(img)
-        plt.imshow(pred, alpha=0.2, cmap='Blues', vmin=0, vmax=1)
+        plt.imshow(img, vmin=0, vmax=255)
         plt.axis('off')
         plt.title('Predicted mask')
         plt.show()
 
-    return pred
+    return img
 
 
 def main():
@@ -175,13 +176,12 @@ def main():
 
     # Test lukimodel with example image
     lukimodel = cnn_vgg_model(input_shape)
-    lukimodel.load_weights("vgg16_bb_fetus.weights.h5")
-    draw_predicted_bounding_box(lukimodel, img)
+    # lukimodel.load_weights("vgg16_bb_fetus.weights.h5")
+    # draw_predicted_bounding_box(lukimodel, img)
 
     # Test ivomodel with example image
-    # ivomodel = unet_model(input_shape)
-    # ivomodel.load_weights("unet_segNT_fetus.weights.h5")
-    # draw_predicted_mask(ivomodel, img)
+    ivomodel = load_model("model-unet-model.keras") 
+    draw_predicted_mask(ivomodel, img)
 
 
 if __name__ == "__main__":
