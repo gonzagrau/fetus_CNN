@@ -8,6 +8,7 @@ from tensorflow.keras.layers import  Concatenate, Conv2DTranspose, ZeroPadding2D
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.saving import load_model
 from lukinoising4GP import lukinoising
+# import nnviz
 
 
 def cnn_vgg_model(input_shape):
@@ -176,11 +177,19 @@ def main():
 
     # Test lukimodel with example image
     lukimodel = cnn_vgg_model(input_shape)
-    # lukimodel.load_weights("vgg16_bb_fetus.weights.h5")
-    # draw_predicted_bounding_box(lukimodel, img)
+    # visualizer = nnviz.Visualizer(lukimodel)
+    # visualization = visualizer.draw()
+    # visualization.save('lukimodel.png')
+
+    # Save or display the visualization
+    lukimodel.load_weights("vgg16_bb_fetus.weights.h5")
+    draw_predicted_bounding_box(lukimodel, img)
 
     # Test ivomodel with example image
     ivomodel = load_model("model-unet-model.keras") 
+    # visualizer_ivo = nnviz.Visualizer(ivomodel)
+    # visualization_ivo = visualizer_ivo.draw()
+    # visualization_ivo.save('ivomodel.png')
     draw_predicted_mask(ivomodel, img)
 
 
