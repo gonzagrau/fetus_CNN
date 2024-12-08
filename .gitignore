@@ -167,3 +167,4 @@ dataset/
 # Model
 *.h5
 *.weights.h5
+*.keras
