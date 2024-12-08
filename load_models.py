@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Tuple
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense, Dropout, Activation
 from tensorflow.keras.layers import  Concatenate, Conv2DTranspose, ZeroPadding2D
@@ -89,22 +90,22 @@ def unet_model(input_shape=(225, 300, 3), num_classes=1):
     return model
 
 
-def load_image(filepath: str, resize_shape: tuple) -> np.ndarray:
+def load_image(filepath: str, resize_shape: tuple) -> Tuple[np.ndarray, np.ndarray]:
     """
     Load image from file
     :param filepath: path to image file
     :return: image as numpy array
     """
-    img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
-    noise = img.copy()
+    raw = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+    raw = cv2.resize(raw, resize_shape)
+    img = raw.copy()
     img = lukinoising(img)
-    img = img + 0.5*noise
+    img = img + 0.5*img
     img[img>255] = 255
     img = np.uint8(img)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-    img = cv2.resize(img, resize_shape)
 
-    return img
+    return raw, img
 
 
 def draw_predicted_bounding_box(model: Model, img: np.ndarray, plot: bool = True):
@@ -170,7 +171,7 @@ def main():
     resize_shape = (300, 225)
     input_shape = (225, 300, 3)
     ex_path = 'dataset/Set1-Training&Validation Sets CNN/Standard/10.png'
-    img = load_image(ex_path, resize_shape)
+    raw, img = load_image(ex_path, resize_shape)
 
     # Test lukimodel with example image
     lukimodel = cnn_vgg_model(input_shape)

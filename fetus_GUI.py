@@ -9,8 +9,7 @@ from load_models import cnn_vgg_model, load_image, draw_predicted_bounding_box
 
 # Load model
 EXAMPLE_IMG = "dataset/Set1-Training&Validation Sets CNN/Standard/25.png"
-MODEL_PATH = "model.h5"
-MODEL_WEIGHTS = "model.weights.h5"
+MODEL_WEIGHTS = "vgg16_bb_fetus.weights.h5"
 IMAGE_SHAPE = (225, 300, 3)
 RESIZE_SHAPE = (300, 225)
 
@@ -38,31 +37,45 @@ class ImageBrowser(QMainWindow):
         # Image label
         self.image_label = QLabel()
         self.layout.addWidget(self.image_label)
-        self.image = None
-        self.image_grayscale = None
-        self.image_predicted = None
+        self.raw = None
+        self.processed_image = None
+        self.img_w_bounding_box = None
+        self.img_w_segmentation = None
         self.load_image(EXAMPLE_IMG)
 
-        # Add 3 buttons in a horizontal layout: original, grayscale, predicted
+        # Add 4 buttons in a horizontal layout: raw, preprocessed, bounding box, segmentation 
         self.button_layout = QVBoxLayout()
         self.layout.addLayout(self.button_layout)
-        self.show_original_button = QPushButton("Original")
-        self.show_original_button.clicked.connect(lambda: self.plot_image(self.image))
-        self.show_
 
+        self.show_original_button = QPushButton("Original")
+        self.show_original_button.clicked.connect(lambda: self.plot_image(self.raw))
+        self.button_layout.addWidget(self.show_original_button)
+
+        self.show_preprocessed_button = QPushButton("Preprocessed")
+        self.show_preprocessed_button.clicked.connect(lambda: self.plot_image(self.processed_image))
+        self.button_layout.addWidget(self.show_preprocessed_button)
+
+        self.show_bounding_box_button = QPushButton("Bounding Box")
+        self.show_bounding_box_button.clicked.connect(lambda: self.plot_image(self.img_w_bounding_box))
+        self.button_layout.addWidget(self.show_bounding_box_button)
+
+        self.show_segmentation_button = QPushButton("Segmentation")
+        self.show_segmentation_button.clicked.connect(lambda: self.plot_image(self.img_w_segmentation))
+        self.button_layout.addWidget(self.show_segmentation_button)
 
     def browse_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open Image File", "",
-                                                   "Image Files (*.jpg *.jpeg *.png *.bmp *.tiff)", dir='./dataset')
+        file_path, _ = QFileDialog.getOpenFileName(self, caption="Open Image File", dir="./dataset",
+                                                   filter="Image Files (*.jpg *.jpeg *.png *.bmp *.tiff)")
         if file_path:
             self.load_image(file_path)
 
     def load_image(self, file_path):
-        img = load_image(file_path)
-        self.image = img.copy()
-        self.image_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        self.image_predicted = draw_predicted_bounding_box(self.model, self.image, plot=False)
-        self.loop_image_processing()
+        raw, img = load_image(file_path, resize_shape=RESIZE_SHAPE)
+        self.raw = raw.copy()
+        self.processed_image = img.copy()
+        self.img_w_bounding_box = draw_predicted_bounding_box(self.model, self.processed_image, plot=False)
+        self.img_w_segmentation = raw # TODO: implement draw_predicted_mask
+        self.plot_image(self.raw)
 
     def plot_image(self, array):
         """
