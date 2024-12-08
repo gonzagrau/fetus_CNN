@@ -17,7 +17,9 @@ def merge_notebooks(notebooks, output_file):
 
 def main():
     notebooks = sorted([file for file in os.listdir() if file.endswith('.ipynb') and 'informe_'  in file])
-    print(notebooks)
+    if 'informe_completo.ipynb' in notebooks:
+        notebooks.remove('informe_completo.ipynb')
+    print('\n'.join(notebooks))
     output_file = 'informe_completo.ipynb'
     merge_notebooks(notebooks, output_file)
 
